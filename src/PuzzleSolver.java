@@ -1,5 +1,5 @@
-// import java.util.List;
-// import java.util.ArrayList;
+import java.util.List;
+import java.util.ArrayList;
 
 /*
     Konstruktor:
@@ -23,6 +23,15 @@ public class PuzzleSolver {
     private boolean[] used;
     private long attemptCount;
     
+    // ANSI color codes
+    private static final String ANSI_RESET  = "\u001B[0m";
+    private static final String ANSI_RED    = "\u001B[31m";
+    private static final String ANSI_GREEN  = "\u001B[32m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_BLUE   = "\u001B[34m";
+    private static final String ANSI_PURPLE = "\u001B[35m";
+    private static final String ANSI_CYAN   = "\u001B[36m";
+    private static final String ANSI_WHITE  = "\u001B[37m";
     /**
      * Konstruktor PuzzleSolver.
      * I.S.: Parameter rows, cols, dan array pieces terdefinisi
@@ -32,9 +41,9 @@ public class PuzzleSolver {
         this.rows = rows;
         this.cols = cols;
         this.pieces = pieces;
-        board = new char[rows][cols];
-        used = new boolean[pieces.length];
-        attemptCount = 0;
+        this.board = new char[rows][cols];
+        this.used = new boolean[pieces.length];
+        this.attemptCount = 0;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 board[r][c] = '.';
@@ -55,16 +64,17 @@ public class PuzzleSolver {
     private boolean backtrack(int pieceIndex) {
         if (pieceIndex == pieces.length)return boardIsFull();
         PuzzlePiece piece = pieces[pieceIndex];
-        int[][] shape = piece.getShapes().get(0);
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                attemptCount++;  // Update iterasi
-                if (canPlace(shape, r, c)) {
-                    placePiece(shape, r, c, piece.getLabel());
-                    used[pieceIndex] = true;
-                    if (backtrack(pieceIndex + 1)) return true;
-                    removePiece(shape, r, c);
-                    used[pieceIndex] = false;
+        for (int[][] shape : getAllTransformations(piece.getShapes().get(0))) {
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                attemptCount++; //hitung jumlah percobaan
+                    if (canPlace(shape, r, c)) {
+                        placePiece(shape, r, c, piece.getLabel());
+                        used[pieceIndex] = true;
+                        if (backtrack(pieceIndex + 1)) return true;
+                        removePiece(shape, r, c);
+                        used[pieceIndex] = false;
+                    }
                 }
             }
         }
@@ -106,8 +116,9 @@ public class PuzzleSolver {
      * F.S.: board diperbarui, sel-sel yang sesuai 
      */
     private void placePiece(int[][] shape, int startRow, int startCol, char label) {
-        for (int r = 0; r < shape.length; r++) {
-            for (int c = 0; c < shape[0].length; c++) {
+        int rCount = shape.length, cCount = shape[0].length;
+        for (int r = 0; r < rCount; r++) {
+            for (int c = 0; c < cCount; c++) {
                 if (shape[r][c] == 1) {
                     board[startRow + r][startCol + c] = label;
                 }
@@ -121,8 +132,9 @@ public class PuzzleSolver {
      * F.S.: Sel-sel yang sebelumnya diisi dengan label dikembalikan ke '.'
      */
     private void removePiece(int[][] shape, int startRow, int startCol) {
-        for (int r = 0; r < shape.length; r++) {
-            for (int c = 0; c < shape[0].length; c++) {
+        int rCount = shape.length, cCount = shape[0].length;
+        for (int r = 0; r < rCount; r++) {
+            for (int c = 0; c < cCount; c++) {
                 if (shape[r][c] == 1) {
                     board[startRow + r][startCol + c] = '.';
                 }
@@ -130,6 +142,71 @@ public class PuzzleSolver {
         }
     }
     
+    //transformation
+    private List<int[][]> getAllTransformations(int[][] shape) {
+        List<int[][]> transformations = new ArrayList<>();
+        List<int[][]> rotations = getRotations(shape);
+        for (int[][] rot : rotations) {
+            if (!contains(transformations, rot))
+                transformations.add(rot);
+            int[][] mirrored = mirror(rot);
+            if (!contains(transformations, mirrored))
+                transformations.add(mirrored);
+        }
+        return transformations;
+    }
+
+    private List<int[][]> getRotations(int[][] shape) {
+        List<int[][]> rotations = new ArrayList<>();
+        rotations.add(shape);
+        int[][] rotated = shape;
+        for (int i = 0; i < 3; i++) {
+            rotated = rotate90(rotated);
+            if (!contains(rotations, rotated))
+                rotations.add(rotated);
+        }
+        return rotations;
+    }
+
+    private int[][] rotate90(int[][] shape) {
+        int r = shape.length, c = shape[0].length;
+        int[][] res = new int[c][r];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                res[j][r - 1 - i] = shape[i][j];
+            }
+        }
+        return res;
+    }
+
+    private int[][] mirror(int[][] shape) {
+        int r = shape.length, c = shape[0].length;
+        int[][] res = new int[r][c];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                res[i][c - 1 - j] = shape[i][j];
+            }
+        }
+        return res;
+    }
+
+    private boolean contains(List<int[][]> list, int[][] candidate) {
+        for (int[][] t : list) {
+            if (areSame(t, candidate)) return true;
+        }
+        return false;
+    }
+
+    private boolean areSame(int[][] a, int[][] b) {
+        if (a.length != b.length || a[0].length != b[0].length) return false;
+        for (int i = 0; i < a.length; i++) {
+            for (int j = 0; j < a[0].length; j++) {
+                if (a[i][j] != b[i][j]) return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Mencetak board puzzle ke konsol
      * I.S.: Board (solusi) telah terbentuk
@@ -138,12 +215,46 @@ public class PuzzleSolver {
     public void printBoard() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                System.out.print(board[r][c]);
+                char ch = board[r][c];
+                String color = getColor(ch);
+                System.out.print(color + ch + ANSI_RESET);
             }
             System.out.println();
         }
     }
     
+    private String getColor(char ch) {
+        switch (Character.toUpperCase(ch)) {
+            case 'A': return ANSI_RED;
+            case 'B': return ANSI_GREEN;
+            case 'C': return ANSI_YELLOW;
+            case 'D': return ANSI_BLUE;
+            case 'E': return ANSI_PURPLE;
+            case 'F': return ANSI_CYAN;
+            case 'G': return ANSI_WHITE;
+            case 'H': return ANSI_RED;
+            case 'I': return ANSI_GREEN;
+            case 'J': return ANSI_YELLOW;
+            case 'K': return ANSI_BLUE;
+            case 'L': return ANSI_PURPLE;
+            case 'M': return ANSI_CYAN;
+            case 'N': return ANSI_WHITE;
+            case 'O': return ANSI_RED;
+            case 'P': return ANSI_GREEN;
+            case 'Q': return ANSI_YELLOW;
+            case 'R': return ANSI_BLUE;
+            case 'S': return ANSI_PURPLE;        
+            case 'T': return ANSI_CYAN;
+            case 'U': return ANSI_WHITE;    
+            case 'V': return ANSI_RED;
+            case 'W': return ANSI_GREEN;
+            case 'X': return ANSI_YELLOW;
+            case 'Y': return ANSI_BLUE;
+            case 'Z': return ANSI_PURPLE;
+            default:  return ANSI_RESET;
+        }
+    }
+
     /**
      * Mengembalikan jumlah attempts yang telah dilakukan
      * I.S.: variabel attemptCount 
