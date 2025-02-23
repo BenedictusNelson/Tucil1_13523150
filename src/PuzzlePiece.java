@@ -15,10 +15,10 @@ public class PuzzlePiece {
     }
 
     public List<int[][]> getShapes() {
-        return shapes;
-    }
+         return shapes;
+        }
 
-    public void addShape(int[][] shape) {
-        this.shapes.add(shape);
-    }
+     public void addShape(int[][] shape) {
+         this.shapes.add(shape);
+     }
 }
