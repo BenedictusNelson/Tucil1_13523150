@@ -10,9 +10,12 @@ Program ini adalah implementasi algoritma Brute Force untuk menyelesaikan permai
 │   ├── PuzzlePiece.java
 │   └── PuzzleSolver.java
 ├── doc/
-│   ├── Tucil1_13523150.pdf
+│   ├── Tucil1_K1_13523150_Benedictus Nelson.pdf
 ├── test/
-│   ├── testcase1--7.txt
+│   ├── solution/
+│   |   ├── sol1--7.txt
+│   ├── testcase/
+│   |   ├── testcase1--7.txt
 ├── bin/
 │   ├── Executables
 ├── README.md
