@@ -1,0 +1,1 @@
+Mode yang didukung hanya DEFAULT.
